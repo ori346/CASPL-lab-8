@@ -279,13 +279,14 @@ void relocationTables()
 {
   int numOfEntries;
   int RelTableType;
-  int tableIndex;
+  int symboleTableIndex;
   Elf32_Shdr *sh_pointer;
   Elf32_Shdr *dynsym;
   Elf32_Shdr *dynstr;
   Elf32_Shdr *strTablePointer;
-  Elf32_Rel *rel;
+  Elf32_Rel *currRel;
   Elf32_Sym *symbol_table_pointer;
+
   if (CurrentFD == -1)
   {
     perror("invalid file descriptor\n");
@@ -300,16 +301,16 @@ void relocationTables()
   {
     if (sh_pointer[i].sh_type == SHT_REL)
     {
-      rel = (Elf32_Rel *)(map_start + sh_pointer[i].sh_offset);
+      currRel = (Elf32_Rel *)(map_start + sh_pointer[i].sh_offset);
       numOfEntries = sh_pointer[i].sh_size / sizeof(Elf32_Rel);
-      printf("table %s at offset %x contains %d entries\n", (char *)(map_start + strTablePointer->sh_offset + sh_pointer[i].sh_name), sh_pointer[i].sh_offset, numOfEntries);
+      printf("Relocation section %s at offset %x contains %d entries\n", (char *)(map_start + strTablePointer->sh_offset + sh_pointer[i].sh_name), sh_pointer[i].sh_offset, numOfEntries);
       printf("Offset\tInfo\tType\tSym.Value\t\tSym.Name\n");
       for (int j = 0; j < numOfEntries; j++)
       {
-        RelTableType = ELF32_R_TYPE(rel[j].r_info);
-        tableIndex = ELF32_R_SYM(rel[j].r_info);
-        symbol_table_pointer = (Elf32_Sym *)(map_start + dynsym->sh_offset + tableIndex * sizeof(Elf32_Sym));
-        printf("%08x\t%08x\t%d\t\t%08x\t%s\n", rel[j].r_offset, rel[j].r_info, RelTableType, symbol_table_pointer->st_value, (char *)(map_start + dynstr->sh_offset + symbol_table_pointer->st_name));
+        RelTableType = ELF32_R_TYPE(currRel[j].r_info);
+        symboleTableIndex = ELF32_R_SYM(currRel[j].r_info);
+        symbol_table_pointer = (Elf32_Sym *)(map_start + dynsym->sh_offset + symboleTableIndex * sizeof(Elf32_Sym));
+        printf("%08x\t%08x\t%d\t\t%08x\t%s\n", currRel[j].r_offset, currRel[j].r_info, RelTableType, symbol_table_pointer->st_value, (char *)(map_start + dynstr->sh_offset + symbol_table_pointer->st_name));
       }
       printf("\n");
     }
